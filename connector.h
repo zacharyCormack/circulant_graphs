@@ -5,26 +5,26 @@
 #pragma once
 
 // ticket determines where to put output
-typedef struct {
+typedef struct tckt_ {
 	void *in;
 	void *(*out)(void *);
 } tckt_;
 
 // base which connector extends
-typedef struct {
+typedef struct cnct_ {
 	unsigned length: 4;
 	unsigned start:  7;
 	unsigned diff:   6;
 } cnct_;
 
 // numbers in descending order, terminating in 0
-typedef struct {
+typedef struct block {
 	unsigned char step;
 	unsigned char parts[];
 } block;
 
 // connector attaches stacks
-typedef struct {
+typedef struct connector {
 	cnct_ base;
 	unsigned char parts[];
 } connector;
@@ -32,8 +32,8 @@ typedef struct {
 unsigned char const primes[55];
 
 // make ticket
-tckt_ set(void *);
+tckt_ *set(void *);
 // find blocks
-void stack(void *, tckt_ *);
+void stack(tckt_ *);
 // find connectors
 void search(block, cnct_, tckt_);

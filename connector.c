@@ -13,18 +13,17 @@ const unsigned char primes[] = {
 	0xFF
 };
 
-unsigned *wr_bk(struct {block *l; block b;} *_in)
+void *wr_bk(struct {block *l; block b;} *_in)
 {
 	*_in->l = _in->b;
-	free(_in);
-	return _in->b.step ? (unsigned *)++_in : NULL;
+	return NULL;
 }
 
-tckt_ set(void *_k)
+tckt_ *set(void *_k)
 {
-	tckt_ r;
-	r.in = _k;
-	r.out = (void *(*)(void *))&wr_bk;
+	tckt_ *r = malloc(sizeof(tckt_));
+	r->in = _k;
+	r->out = (void *(*)(void *))&wr_bk;
 	return r;
 }
 
@@ -33,27 +32,29 @@ char chk(unsigned _b)
 	return 0;
 }
 
-void stack(void *_p, tckt_ *_t)
+void stack(tckt_ *_t)
 {
-	unsigned char k = *(unsigned *)(_p+1) - 1;
-	block *b = malloc(sizeof(block) + k);
+	unsigned char k = *(unsigned char *)(_t->in) - 1;
+	block *b = malloc((k+1) * sizeof(block));
 	
-	b->step = *(unsigned char *)_p;
+	b->step = *(unsigned char *)(_t->in+1);
 
-	unsigned char *j = malloc(k+1);
+	unsigned char *j = malloc(k);
 	*(j+k) = 0;
 
-	while (_t) {
+	while (_t->in) {
 		unsigned char *h = j+k;
-		while (k-->j)
+		while (h-->j)
 			*h = (unsigned char)rand();
 
 		if (chk(k)) continue;
 
 		void *o = malloc(sizeof(b) + sizeof(*b));
-		*(block *)(o) = *(block *)(_p+2);
+		*(block **)o = *(block **)(_t->in+2);
 		*(block *)(o + sizeof(b)) = *b;
-		_t = (tckt_ *)((*(_t->out))(o));
+		((*(_t->out))(o));
+		free(o);
+		_t++;
 	}
 
 	free(j);

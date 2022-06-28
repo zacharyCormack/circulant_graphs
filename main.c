@@ -5,7 +5,10 @@ tckt_ t[2], *t_set;
 
 void p_bk(block _b)
 {
-	printf("%hhu: %s\n", _b.step, (char *)_b.parts);
+	printf("%hhu: ", _b.step);
+	char *c = _b.parts;
+	do printf("%02hhX", *c);
+	while (++c);
 }
 
 int main()
@@ -19,7 +22,9 @@ int main()
 	printf("Enter H: ");
 	scanf("%hhu", p+1);
 	
-	*(block **)(p+2) = malloc(sizeof(block));
+	*(block **)(p+2) = malloc(sizeof(block)+*p);
+
+	printf("Output space: %p\n", *(block **)(p+2));
 
 	t_set = set(p);
 	*t = *t_set;
@@ -31,7 +36,7 @@ int main()
 	block *out = *(block **)(p+2);
 
 	do p_bk(*out);
-	while (++out->step);
+	while ((++out)->step);
 
 	free(*(block **)(p+2));
 	free(p);

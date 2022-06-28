@@ -12,21 +12,21 @@ typedef struct tckt_ {
 
 // base which connector extends
 typedef struct cnct_ {
-	unsigned length: 4;
-	unsigned start:  7;
+	unsigned length: 5;
+	unsigned start:  5;
 	unsigned diff:   6;
 } cnct_;
 
 // numbers in descending order, terminating in 0
 typedef struct block {
 	unsigned char step;
-	unsigned char parts[];
+	char parts[];
 } block;
 
 // connector attaches stacks
 typedef struct connector {
 	cnct_ base;
-	unsigned char parts[];
+	char parts[];
 } connector;
 
 unsigned char const primes[55];

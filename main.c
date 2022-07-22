@@ -1,19 +1,25 @@
 #include"connector.h"
 
 unsigned char *p;
+const char t_block[] = {11, 5, 5, -2, 0};
 tckt_ t[2], *t_set;
+block *tst;
 
 void p_bk(block _b)
 {
 	printf("%hhu: ", _b.step);
-	char *c = _b.parts;
-	do printf("%02hhX", *c);
-	while (++c);
+	for (char *c = _b.parts; *c != '0'; c++)
+		printf("%02hhX", *c);
 }
 
 int main()
 {
 	srand((unsigned)time(NULL));
+
+	tst = malloc(6);
+	tst->step = 19;
+	strcpy(tst->parts, t_block);
+	printf("%s\n", chk_bk(tst) ? "GOOD" : "BAD");
 	
 	p = malloc(2 + sizeof(block *));
 
@@ -33,10 +39,8 @@ int main()
 	
 	stack(t);
 
-	block *out = *(block **)(p+2);
-
-	do p_bk(*out);
-	while ((++out)->step);
+	for (block *i = *(block **)(p+2); i->step; i++)
+		p_bk(*i);
 
 	free(*(block **)(p+2));
 	free(p);

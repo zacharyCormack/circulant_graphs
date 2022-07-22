@@ -37,3 +37,5 @@ tckt_ *set(void *);
 void stack(tckt_ *);
 // find connectors
 void search(block, cnct_, tckt_);
+
+char chk_bk(block *);

@@ -13,11 +13,11 @@ const unsigned char primes[] = {
 	255
 };
 
-void *wr_bk(struct {block *l; block b;} _in)
+void *wr_bk(block **_in)
 {
-	printf("%p\n", &_in);
-	printf("Writing to %p\n", _in.l);
-	*_in.l = _in.b;
+	printf("%p\n", _in);
+	printf("Writing to %p\n", *_in);
+	**_in = *(block *)(_in+1);
 	// planned to later return information input 
 	return NULL;
 }
@@ -94,23 +94,25 @@ char chk_ct(connector *_c, block *_b)
 void stack(tckt_ *_t)
 {
 	unsigned char k = *(unsigned char *)(_t->in) - 1;
-	block *o = malloc(sizeof(block *) + sizeof(block) + k + 1);
+	block **o = malloc(sizeof(block *) + sizeof(block) + k + 1);
 	printf("Output is: %p\n", o);
 	
-	*(block **)o = *(block **)(_t->in+2);
-	printf("Space provided: %p\n", *(block **)o);
-	(o+1)->step = *(unsigned char *)(_t->in+1);
-	(o+1)->parts[k] = 0;
+	printf("%zu & %zu\n", sizeof(block *), sizeof(block **));
+	*o = *(block **)(_t->in+2);
+	printf("Space provided: %p\n", *o);
+	((block *)(o+1))->step = *(unsigned char *)(_t->in+1);
+	printf("Space provided: %p\n", *o);
+	((block *)(o+1))->parts[k] = 0;
 
 	while (_t->in) {
 		printf("Shuffling...\n");
-		char *h = (o+1)->parts + k;
-		while (h-->((o+1)->parts))
+		char *h = ((block *)(o+1))->parts + k;
+		while (h-->(((block *)(o+1))->parts))
 			*h = (char)rand();
 
-		if (chk_bk(o+1)) continue;
+		if (chk_bk((block *)(o+1))) continue;
 
-		printf("Recording...\n");
+		printf("Recording %p...\n", o);
 
 		(*_t->out)(o);
 		_t++;
@@ -121,7 +123,7 @@ void stack(tckt_ *_t)
 
 void search(block _b, cnct_ _c, tckt_ _t)
 {
-	unsigned char k = *(unsigned char *)(_t->in) - 1;
+	unsigned char k = *(unsigned char *)(_t.in) - 1;
 	connector *o = malloc(sizeof(connector *) + sizeof(connector) + k + 1);
 	// printf("Output is: %p\n", o);
 	

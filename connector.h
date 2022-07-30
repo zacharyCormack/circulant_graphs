@@ -34,8 +34,8 @@ unsigned char const primes[55];
 // make ticket
 tckt_ *set(void *);
 // find blocks
-void stack(tckt_ *);
+tckt_ stack(tckt_ *);
 // find connectors
-void search(block, cnct_, tckt_);
-
-char chk_bk(block *);
+void search(tckt_ *);
+// record connectors
+void pack(tckt_ *);

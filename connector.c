@@ -10,22 +10,19 @@ const unsigned char primes[] = {
 	157,	163,	167,	173,	179,	181,
 	191,	193,	197,	199,	211,	223,
 	227,	229,	233,	239,	241,	251,
-	255
+	0
 };
 
 void *wr_bk(block **_in)
 {
-	printf("%p\n", _in);
-	printf("Writing to %p\n", *_in);
-	**_in = *(block *)(_in+1);
-	// planned to later return information input 
+	strcpy(*_in, _in+1);
+	// planned to later return information input
 	return NULL;
 }
 
 tckt_ *set(void *_k)
 {
 	tckt_ *r = malloc(sizeof(tckt_));
-	printf("Set for %p\n", r);
 	r->in = _k;
 	r->out = (void *(*)(void *))&wr_bk;
 	return r;
@@ -33,21 +30,20 @@ tckt_ *set(void *_k)
 
 char cp(unsigned char _p)
 {
-	const unsigned char *ck = primes;
-	do if (_p == *ck) return 0;
-	while (~*++ck);
-
+	for (const unsigned char *ck = primes; _p>=*ck; ck++)
+		if (_p == *ck) return 0;
+	
 	return 1;
 }
 
 char chk_bk(block *_b)
 {
 	short s = 0;
-	char *p = _b->parts;
-	do s += *p;
-	while (*++p);
-
-	return cp(s > 0 ? s : -s);
+	for (char *p = _b->parts; *p; p++)
+		if (cp(*p > 0 ? *p : -*p)) return 1;
+		else s += *p;
+	
+	return s != _b->step;
 }
 
 char chk_ct(connector *_c, block *_b)
@@ -91,60 +87,47 @@ char chk_ct(connector *_c, block *_b)
 	return 0;
 }
 
-void stack(tckt_ *_t)
+tckt_ stack(tckt_ *_t)
 {
 	unsigned char k = *(unsigned char *)(_t->in) - 1;
 	block **o = malloc(sizeof(block *) + sizeof(block) + k + 1);
-	printf("Output is: %p\n", o);
 	
-	printf("%zu & %zu\n", sizeof(block *), sizeof(block **));
 	*o = *(block **)(_t->in+2);
-	printf("Space provided: %p\n", *o);
 	((block *)(o+1))->step = *(unsigned char *)(_t->in+1);
-	printf("Space provided: %p\n", *o);
+	memset(((block *)(o+1))->parts, 1, k);
 	((block *)(o+1))->parts[k] = 0;
 
-	while (_t->in) {
-		printf("Shuffling...\n");
-		char *h = ((block *)(o+1))->parts + k;
-		while (h-->(((block *)(o+1))->parts))
-			*h = (char)rand();
+	do {
+		for (char *h = ((block *)(o+1))->parts; *h; h++)
+			*h = ((rand()&2)-1)*primes[rand()%30];
 
 		if (chk_bk((block *)(o+1))) continue;
 
-		printf("Recording %p...\n", o);
-
 		(*_t->out)(o);
-		_t++;
-	}
+	} while ((++_t)->in);
 
 	free(o);
 }
 
-void search(block _b, cnct_ _c, tckt_ _t)
+void pack(tckt_ *_t)
 {
-	unsigned char k = *(unsigned char *)(_t.in) - 1;
-	connector *o = malloc(sizeof(connector *) + sizeof(connector) + k + 1);
-	// printf("Output is: %p\n", o);
-	
-	// *(connector **)o = *(connector **)(_t->in+2);
-	// printf("Space provided: %p\n", *(connector **)o);
-	// (o+1)->step = *(unsigned char *)(_t->in+1);
-	// (o+1)->parts[k] = 0;
 
-	// while (_t->in) {
-	// 	printf("Shuffling...\n");
-	// 	char *h = (o+1)->parts + k;
-	// 	while (h-->((o+1)->parts))
-	// 		*h = (char)rand();
+}
 
-	// 	if (chk_ct(o+1)) continue;
+void search(tckt_ *_t)
+{
+	unsigned char k = *(unsigned char *)(_t->in) - 1;
+	connector **o = malloc(sizeof(connector *) + sizeof(connector) + k + 1);
+	*o = *(connector **)(_t->in+2);
 
-	// 	printf("Recording...\n");
+	do {
+		for (char *h = ((block *)(o+1))->parts; *h; h++)
+			*h = ((rand()&2)-1)*primes[rand()%30];
 
-	// 	(*_t->out)(o);
-	// 	_t++;
-	// }
+		if (chk_ct((connector *)(o+1), _b)) continue;
+
+		(*_t->out)(o);
+	} while ((++_t)->in);
 
 	free(o);
 }

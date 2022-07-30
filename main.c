@@ -2,24 +2,19 @@
 
 unsigned char *p;
 const char t_block[] = {11, 5, 5, -2, 0};
-tckt_ t[2], *t_set;
+tckt_ t[2], *t_set, rs;
 block *tst;
 
-void p_bk(block _b)
+void p_bk(block *_b)
 {
-	printf("%hhu: ", _b.step);
-	for (char *c = _b.parts; *c != '0'; c++)
-		printf("%02hhX", *c);
+	printf("%hhu: ", _b->step);
+	for (char *c = _b->parts; *c; c++)
+		printf("%+-5hhd", *c);
 }
 
 int main()
 {
 	srand((unsigned)time(NULL));
-
-	tst = malloc(6);
-	tst->step = 19;
-	strcpy(tst->parts, t_block);
-	printf("%s\n", chk_bk(tst) ? "GOOD" : "BAD");
 	
 	p = malloc(2 + sizeof(block *));
 
@@ -28,19 +23,18 @@ int main()
 	printf("Enter H: ");
 	scanf("%hhu", p+1);
 	
-	*(block **)(p+2) = malloc(sizeof(block)+*p);
-
-	printf("Output space: %p\n", *(block **)(p+2));
+	*(block **)(p+2) = malloc(sizeof(block)+(++*p));
 
 	t_set = set(p);
 	*t = *t_set;
-	memset(t+1, 0, sizeof(tckt_));
 	free(t_set);
+	memset(t+1, 0, sizeof(tckt_));
 	
-	stack(t);
+	rs = stack(t);
+	pack(rs);
+	search(rs);
 
-	for (block *i = *(block **)(p+2); i->step; i++)
-		p_bk(*i);
+	p_bk(*(block **)(p+2));
 
 	free(*(block **)(p+2));
 	free(p);

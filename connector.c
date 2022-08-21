@@ -1,6 +1,6 @@
 #include"connector.h"
 
-const unsigned char primes[] = {
+const uint8_t primes[] = {
 	2,	3,	5,	7,	11,	13,
 	17,	19,	23,	29,	31,	37,
 	41,	43,	47,	53,	59,	61,
@@ -13,7 +13,7 @@ const unsigned char primes[] = {
 	0
 };
 
-void *wr_bk(block **_in)
+void *wr(block **_in)
 {
 	strcpy(*_in, _in+1);
 	// planned to later return information input
@@ -24,19 +24,30 @@ tckt_ *set(void *_k)
 {
 	tckt_ *r = malloc(sizeof(tckt_));
 	r->in = _k;
-	r->out = (void *(*)(void *))&wr_bk;
+	r->out = (void *(*)(void *))&wr;
 	return r;
 }
 
-char cp(unsigned char _p)
+tckt_ *pack(tckt_ *_t)
 {
-	for (const unsigned char *ck = primes; _p>=*ck; ck++)
+	tckt_ *r = malloc(sizeof(tckt_));
+	void  *z = malloc(sizeof(_t->in)+sizeof(block *));
+	strcpy(z, _t->in);
+	*(block **)(z+2+sizeof(connector *)) =
+		malloc(sizeof(connector)+*(uint8_t *)(z));
+	r->in = _t->in;
+	r->out = wr;
+}
+
+char cp(uint8_t _p)
+{
+	for (const uint8_t *ck = primes; _p>=*ck; ck++)
 		if (_p == *ck) return 0;
 	
 	return 1;
 }
 
-char chk_bk(block *_b)
+char c_bk(block *_b)
 {
 	short s = 0;
 	for (char *p = _b->parts; *p; p++)
@@ -46,7 +57,7 @@ char chk_bk(block *_b)
 	return s != _b->step;
 }
 
-char chk_ct(connector *_c, block *_b)
+char c_ct(connector *_c, block *_b)
 {
 	short s = 0;
 	char *q = _b->parts, *p = _c->parts;
@@ -87,13 +98,13 @@ char chk_ct(connector *_c, block *_b)
 	return 0;
 }
 
-tckt_ stack(tckt_ *_t)
+tckt_ *stack(tckt_ *_t)
 {
-	unsigned char k = *(unsigned char *)(_t->in) - 1;
+	uint8_t k = *(uint8_t *)(_t->in) - 1;
 	block **o = malloc(sizeof(block *) + sizeof(block) + k + 1);
 	
 	*o = *(block **)(_t->in+2);
-	((block *)(o+1))->step = *(unsigned char *)(_t->in+1);
+	((block *)(o+1))->step = *(uint8_t *)(_t->in+1);
 	memset(((block *)(o+1))->parts, 1, k);
 	((block *)(o+1))->parts[k] = 0;
 
@@ -101,30 +112,29 @@ tckt_ stack(tckt_ *_t)
 		for (char *h = ((block *)(o+1))->parts; *h; h++)
 			*h = ((rand()&2)-1)*primes[rand()%30];
 
-		if (chk_bk((block *)(o+1))) continue;
+		if (c_bk((block *)(o+1))) continue;
 
 		(*_t->out)(o);
 	} while ((++_t)->in);
 
 	free(o);
-}
 
-void pack(tckt_ *_t)
-{
-
+	return pack(_t);
 }
 
 void search(tckt_ *_t)
 {
-	unsigned char k = *(unsigned char *)(_t->in) - 1;
+	uint8_t k = *(uint8_t *)(_t->in) - 1;
+	block **b = malloc(sizeof(block *));
 	connector **o = malloc(sizeof(connector *) + sizeof(connector) + k + 1);
-	*o = *(connector **)(_t->in+2);
+	*b = *(block **)(_t->in+2);
+	*o = *(connector **)(_t->in+2+sizeof(block *));
 
 	do {
 		for (char *h = ((block *)(o+1))->parts; *h; h++)
 			*h = ((rand()&2)-1)*primes[rand()%30];
 
-		if (chk_ct((connector *)(o+1), _b)) continue;
+		if (c_ct((connector *)(o+1), *b)) continue;
 
 		(*_t->out)(o);
 	} while ((++_t)->in);

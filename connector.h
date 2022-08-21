@@ -19,7 +19,7 @@ typedef struct cnct_ {
 
 // numbers in descending order, terminating in 0
 typedef struct block {
-	unsigned char step;
+	uint8_t step;
 	char parts[];
 } block;
 
@@ -29,13 +29,11 @@ typedef struct connector {
 	char parts[];
 } connector;
 
-unsigned char const primes[55];
+uint8_t const primes[55];
 
 // make ticket
 tckt_ *set(void *);
 // find blocks
-tckt_ stack(tckt_ *);
+tckt_ *stack(tckt_ *);
 // find connectors
 void search(tckt_ *);
-// record connectors
-void pack(tckt_ *);

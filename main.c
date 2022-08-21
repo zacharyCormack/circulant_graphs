@@ -2,7 +2,7 @@
 
 unsigned char *p;
 const char t_block[] = {11, 5, 5, -2, 0};
-tckt_ t[2], *t_set, rs;
+tckt_ t[2], *t_set;
 block *tst;
 
 void p_bk(block *_b)
@@ -30,9 +30,9 @@ int main()
 	free(t_set);
 	memset(t+1, 0, sizeof(tckt_));
 	
-	rs = stack(t);
-	pack(rs);
-	search(rs);
+	search(stack(t));
+
+	// to do: read connector detected
 
 	p_bk(*(block **)(p+2));
 

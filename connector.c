@@ -13,9 +13,11 @@ const uint8_t primes[] = {
 	0
 };
 
-void *wr(block **_in)
+// write to output space
+void *wr(void *_in)
 {
-	strcpy(*_in, _in+1);
+	printf("Writing to %p\n", _in);
+	strncpy(*(void **)_in, _in+1, sizeof(void *));
 	// planned to later return information input
 	return NULL;
 }
@@ -24,21 +26,32 @@ tckt_ *set(void *_k)
 {
 	tckt_ *r = malloc(sizeof(tckt_));
 	r->in = _k;
-	r->out = (void *(*)(void *))&wr;
+	r->out = &wr;
 	return r;
 }
 
+// prepare new ticket
 tckt_ *pack(tckt_ *_t)
 {
 	tckt_ *r = malloc(sizeof(tckt_));
-	void  *z = malloc(sizeof(_t->in)+sizeof(block *));
-	strcpy(z, _t->in);
-	*(block **)(z+2+sizeof(connector *)) =
+	void  *z = malloc(3+sizeof(connector *));
+
+	// todo: move to main function
+	printf("Connector width: ");
+	scanf("%hhu", (uint8_t *)z);
+
+	// following inputs same as to stack
+	strncpy(z+1, _t->in, 2+sizeof(connector *));
+	// create new output space
+	*(connector **)(z+2+sizeof(connector *)) =
 		malloc(sizeof(connector)+*(uint8_t *)(z));
-	r->in = _t->in;
-	r->out = wr;
+	r->in = z;
+	r->out = &wr;
+
+	return r;
 }
 
+// check if number is prime
 char cp(uint8_t _p)
 {
 	for (const uint8_t *ck = primes; _p>=*ck; ck++)
@@ -47,6 +60,7 @@ char cp(uint8_t _p)
 	return 1;
 }
 
+// check that block is valid
 char c_bk(block *_b)
 {
 	short s = 0;
@@ -57,6 +71,7 @@ char c_bk(block *_b)
 	return s != _b->step;
 }
 
+// check if connector is valid
 char c_ct(connector *_c, block *_b)
 {
 	short s = 0;
@@ -108,36 +123,32 @@ tckt_ *stack(tckt_ *_t)
 	memset(((block *)(o+1))->parts, 1, k);
 	((block *)(o+1))->parts[k] = 0;
 
-	do {
-		for (char *h = ((block *)(o+1))->parts; *h; h++)
-			*h = ((rand()&2)-1)*primes[rand()%30];
-
-		if (c_bk((block *)(o+1))) continue;
-
-		(*_t->out)(o);
-	} while ((++_t)->in);
+	do for (char *h = ((block *)(o+1))->parts; *h; h++)
+		*h = ((rand()&2)-1)*primes[rand()%30];
+	while (c_bk((block *)(o+1)) && (++_t)->in);
 
 	free(o);
 
-	return pack(_t);
+	return pack(--_t);
 }
 
 void search(tckt_ *_t)
 {
-	uint8_t k = *(uint8_t *)(_t->in) - 1;
+	uint8_t w = *(uint8_t *)(_t->in) - 1, k = *((uint8_t *)(_t->in)+1);
 	block **b = malloc(sizeof(block *));
-	connector **o = malloc(sizeof(connector *) + sizeof(connector) + k + 1);
+	connector **o = malloc(sizeof(connector *) + sizeof(connector) + w + 1);
+	printf("%p, %p\n", _t->in, _t->in+2);
 	*b = *(block **)(_t->in+2);
 	*o = *(connector **)(_t->in+2+sizeof(block *));
 
 	do {
-		for (char *h = ((block *)(o+1))->parts; *h; h++)
+		for (char *h = ((connector *)(o+1))->parts; *h; h++)
 			*h = ((rand()&2)-1)*primes[rand()%30];
 
 		if (c_ct((connector *)(o+1), *b)) continue;
 
-		(*_t->out)(o);
-	} while ((++_t)->in);
+		(*_t++->out)(o);
+	} while (_t->in);
 
 	free(o);
 }

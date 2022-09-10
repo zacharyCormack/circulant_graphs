@@ -26,6 +26,7 @@ typedef struct block {
 // connector attaches stacks
 typedef struct connector {
 	cnct_ base;
+	block *b;
 	char parts[];
 } connector;
 
